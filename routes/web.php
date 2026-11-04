@@ -30,16 +30,20 @@ Route::middleware('auth')->group(function (): void {
 
     Route::get('/contributors', [App\Http\Controllers\ContributorController::class, 'dashboard'])->name('contributors.dashboard');
     Route::post('/contributors/apply', [App\Http\Controllers\ContributorController::class, 'apply'])->name('contributors.apply');
-
     Route::get('/points', [App\Http\Controllers\PointsController::class, 'index'])->name('points.index');
     Route::post('/points/award', [App\Http\Controllers\PointsController::class, 'award'])->name('points.award');
-
     Route::get('/rewards', [App\Http\Controllers\RewardController::class, 'index'])->name('rewards.index');
     Route::post('/rewards/{reward}/redeem', [App\Http\Controllers\RewardController::class, 'redeem'])->name('rewards.redeem');
 });
 
-Route::middleware(['auth', 'admin'])->group(function (): void {
-    Route::get('/admin', [App\Http\Controllers\AdminController::class, 'dashboard'])->name('admin.dashboard');
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function (): void {
+    Route::get('/', [App\Http\Controllers\AdminController::class, 'dashboard'])->name('dashboard');
+});
+
+Route::middleware(['auth', 'staff'])->group(function (): void {
+    Route::get('/admin/analytics', [App\Http\Controllers\AnalyticsController::class, 'index'])->name('admin.analytics');
+    Route::get('/admin/reports/ai.csv', [App\Http\Controllers\AnalyticsController::class, 'aiCsv'])->name('admin.reports.ai');
+    Route::get('/admin/reports/moderation.csv', [App\Http\Controllers\AnalyticsController::class, 'moderationCsv'])->name('admin.reports.moderation');
 
     Route::get('/moderation', [App\Http\Controllers\ModerationController::class, 'index'])->name('moderation.index');
     Route::get('/moderation/{contentPost}', [App\Http\Controllers\ModerationController::class, 'show'])->name('moderation.show');
