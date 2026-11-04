@@ -2,36 +2,35 @@
   "$schema": "https://getcomposer.org/schema.json",
   "name": "hourlymonitor/biettuot",
   "type": "project",
-  "description": "BiếtTuốt AI Q&A + modular MVP",
+  "description": "BiếtTuốt Vietnamese AI learning and community platform",
   "keywords": ["laravel", "ai", "chatbot", "vietnamese"],
   "license": "proprietary",
   "require": {
     "php": "^8.2",
-    "laravel/framework": "^11.0",
+    "laravel/framework": "^11.0"
+  },
+  "require-dev": {
     "nunomaduro/collision": "^8.0",
     "phpunit/phpunit": "^11.0"
   },
   "autoload": {
-    "psr-4": {
-      "App\\": "app/"
-    }
+    "psr-4": {"App\\": "app/"}
   },
   "autoload-dev": {
-    "psr-4": {
-      "Tests\\": "tests/"
-    }
+    "psr-4": {"Tests\\": "tests/"}
   },
   "scripts": {
     "post-autoload-dump": [
       "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
       "@php artisan package:discover --ansi"
     ],
-    "test": "php artisan test"
+    "test": "@php artisan test"
   },
   "config": {
     "optimize-autoloader": true,
     "preferred-install": "dist",
-    "sort-packages": true
+    "sort-packages": true,
+    "allow-plugins": {"php-http/discovery": true}
   },
   "minimum-stability": "stable",
   "prefer-stable": true
