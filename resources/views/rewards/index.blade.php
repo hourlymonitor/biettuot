@@ -1,32 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Đổi quà')
 @section('content')
-<div class="card" style="max-width:980px;margin:32px auto">
-    <h1>Đổi quà</h1>
-
-    @forelse($rewards as $reward)
-        <div class="card" style="padding:18px;border:1px solid #e7e9f0;margin-bottom:14px">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-                <div>
-                    <h3 style="margin:0">{{ $reward->name }}</h3>
-                    <p class="muted" style="margin:8px 0 0">{{ $reward->description }}</p>
-                </div>
-                <form method="POST" action="{{ route('rewards.redeem', $reward) }}">@csrf
-                    <button class="btn" type="submit">Đổi {{ $reward->cost_points }} điểm</button>
-                </form>
-            </div>
-        </div>
-    @empty
-        <p class="muted">Hiện chưa có phần thưởng nào.</p>
-    @endforelse
-
-    @if($claims->isNotEmpty())
-        <h3>Lịch sử yêu cầu</h3>
-        <ul>
-            @foreach($claims as $claim)
-                <li>{{ $claim->reward->name ?? 'Quà' }} — {{ $claim->status }}</li>
-            @endforeach
-        </ul>
-    @endif
-</div>
+<div class="card" style="max-width:980px;margin:auto"><h1>Đổi quà</h1><p class="muted">Số dư hiện tại: <strong>{{ number_format($balance) }}</strong> điểm</p>
+<div class="stats">@forelse($rewards as $reward)<article class="card"><h2>{{ $reward->name }}</h2><p class="muted">{{ $reward->description }}</p><p><strong>{{ number_format($reward->cost_points) }} điểm</strong></p><form method="POST" action="{{ route('rewards.redeem', $reward) }}">@csrf<button class="btn" type="submit" @disabled($balance < $reward->cost_points)>Đổi quà</button></form></article>@empty<p>Chưa có quà tặng.</p>@endforelse</div>
+<h2 style="margin-top:30px">Yêu cầu của tôi</h2><div class="tablewrap"><table><thead><tr><th>Quà</th><th>Ngày</th><th>Trạng thái</th><th>Ghi chú</th></tr></thead><tbody>@forelse($claims as $claim)<tr><td>{{ $claim->reward->name ?? 'Quà đã xóa' }}</td><td>{{ $claim->created_at->format('d/m/Y') }}</td><td>{{ $claim->status }}</td><td>{{ $claim->notes }}</td></tr>@empty<tr><td colspan="4">Chưa có yêu cầu đổi quà.</td></tr>@endforelse</tbody></table></div></div>
 @endsection

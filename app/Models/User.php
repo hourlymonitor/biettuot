@@ -12,44 +12,17 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     protected $fillable = ['name', 'email', 'password'];
-
     protected $hidden = ['password', 'remember_token'];
 
     protected function casts(): array
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return ['email_verified_at' => 'datetime', 'password' => 'hashed'];
     }
 
-    public function chatSessions(): HasMany
-    {
-        return $this->hasMany(ChatSession::class);
-    }
-
-    public function contentPosts(): HasMany
-    {
-        return $this->hasMany(ContentPost::class);
-    }
-
-    public function contributorProfile()
-    {
-        return $this->hasOne(ContributorProfile::class);
-    }
-
-    public function pointLedger(): HasMany
-    {
-        return $this->hasMany(PointLedger::class);
-    }
-
-    public function rewardClaims(): HasMany
-    {
-        return $this->hasMany(RewardClaim::class);
-    }
-
-    public function pointBalance(): int
-    {
-        return (int) $this->pointLedger()->sum('points');
-    }
+    public function chatSessions(): HasMany { return $this->hasMany(ChatSession::class); }
+    public function contentPosts(): HasMany { return $this->hasMany(ContentPost::class); }
+    public function pointLedger(): HasMany { return $this->hasMany(PointLedger::class); }
+    public function rewardClaims(): HasMany { return $this->hasMany(RewardClaim::class); }
+    public function contributorProfile() { return $this->hasOne(ContributorProfile::class); }
+    public function pointBalance(): int { return (int) $this->pointLedger()->sum('points'); }
 }
