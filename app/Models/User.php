@@ -18,4 +18,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(ChatSession::class);
     }
+
+    public function contentPosts()
+    {
+        return $this->hasMany(ContentPost::class);
+    }
 }
