@@ -32,4 +32,24 @@ class User extends Authenticatable
     {
         return $this->hasMany(ContentPost::class);
     }
+
+    public function contributorProfile()
+    {
+        return $this->hasOne(ContributorProfile::class);
+    }
+
+    public function pointLedger(): HasMany
+    {
+        return $this->hasMany(PointLedger::class);
+    }
+
+    public function rewardClaims(): HasMany
+    {
+        return $this->hasMany(RewardClaim::class);
+    }
+
+    public function pointBalance(): int
+    {
+        return (int) $this->pointLedger()->sum('points');
+    }
 }
