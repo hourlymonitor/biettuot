@@ -1,10 +1,10 @@
 # Full web modules and setup
 
-BiếtTuốt is a Laravel 11/PHP 8.2 web app with Vietnamese interface: registration/login, AI chat, AI content drafts, contributor applications, points/rewards, moderation, admin operations, analytics, and CSV reports.
+BiếtTuốt is a Vietnamese Laravel 11/PHP 8.2 web application. Modules include registration/login, AI chat, AI content drafts, contributor applications, points ledger, rewards, content moderation, admin operations, analytics, and CSV reports.
 
-## Run the site
+## Run locally
 
-Install PHP 8.2+, Composer 2, MySQL 8+, and PHP extensions including `mbstring`, `openssl`, `pdo_mysql`, `tokenizer`, `xml`, `ctype`, `json`, and `fileinfo`. Then, in the project folder:
+Install PHP 8.2+, Composer 2, MySQL 8+, and PHP extensions including `mbstring`, `openssl`, `pdo_mysql`, `tokenizer`, `xml`, `ctype`, `json`, and `fileinfo`. In the project folder run:
 
 ```bash
 composer install
@@ -12,31 +12,26 @@ cp .env.example .env
 php artisan key:generate
 ```
 
-Create a MySQL database, set its credentials in `.env`, then set the real administrator and moderator email addresses in `ADMIN_EMAILS` and `MODERATOR_EMAILS`. Configure AI keys only if live AI calls are needed. Never commit `.env` or expose API keys in the browser.
+Create a MySQL database and set its credentials in `.env`. Set `ADMIN_EMAILS` and `MODERATOR_EMAILS` to real, controlled addresses. Add an OpenAI-compatible provider key/model for live AI features (never put API keys in browser code). Then:
 
 ```bash
 php artisan migrate --seed
+php artisan route:list
+php artisan test
 php artisan serve
 ```
 
-Open <http://127.0.0.1:8000>, register with the admin email configured in `.env`, and use the navigation to access modules. Admin/moderator accounts are selected through the server-side email allowlists. This MVP does not send verification email; restrict public registration until verification and abuse controls are enabled.
+Open <http://127.0.0.1:8000> and register. If using the admin allowlist, register with the configured admin email. AI features require valid provider credentials. Tests use an in-memory SQLite database and mocked HTTP; enable `pdo_sqlite`.
 
 ## Modules
 
-- `/chat`: private AI conversations. AI keys stay server-side; provider calls are logged.
-- `/content`: AI-assisted drafts saved privately and routed for staff review.
-- `/contributors`: application form; profiles begin pending, admins approve/reject under `/admin/contributors`.
-- `/points`: append-only point history.
-- `/rewards`: catalog and redemption. Redemption checks and deducts balance in a transaction.
-- `/admin/rewards`: reward catalog management and processing claims. Cancelling a claim refunds points.
-- `/moderation`: staff review queue, review history, and one-time 50-point award on approval.
-- `/admin/analytics`: staff-only metrics with date filters and AI/moderation CSV exports.
+- `/chat`: private conversation history and server-side AI gateway with fallback.
+- `/content`: private AI-assisted drafts; new content is always saved as `draft`.
+- `/contributors`: applications begin pending and admins can review at `/admin/contributors`.
+- `/points`: append-only ledger and balance history.
+- `/rewards`: catalog and redemption; balances are checked transactionally.
+- `/admin/rewards`: reward catalog and claim management; cancelling a claim refunds points.
+- `/moderation`: staff review queue, audit history, and one-time 50-point award on approval.
+- `/admin`: administrator dashboard; `/admin/analytics` and CSV reports are available to admins/moderators.
 
-## Verify
-
-```bash
-php artisan route:list
-php artisan test
-```
-
-Tests use SQLite in memory and mocked AI responses; enable `pdo_sqlite`. They do not prove live MySQL/provider credentials or production hosting. Production must use `APP_ENV=production`, `APP_DEBUG=false`, HTTPS, a strong key, database backups, writable `storage`/`bootstrap/cache`, and document root set to `public/`.
+Set `APP_ENV=production`, `APP_DEBUG=false`, HTTPS, a strong `APP_KEY`, server-side provider keys, and writable `storage/`/`bootstrap/cache/` for production. Point the domain document root to `public/`; back up the database before `php artisan migrate --force`. Email verification and production deployment have not been exercised by this implementation task.

@@ -15,7 +15,6 @@ class ContentController extends Controller
     public function index(): View
     {
         $posts = auth()->user()->contentPosts()->latest()->paginate(10);
-
         return view('content.index', compact('posts'));
     }
 
@@ -26,55 +25,50 @@ class ContentController extends Controller
 
     public function generate(Request $request, AiGateway $gateway): RedirectResponse
     {
-        $validated = $request->validate([
-            'prompt' => ['required', 'string', 'max:2000'],
-        ]);
-
-        $session = auth()->user()->chatSessions()->create([
+        $validated = $request->validate(['prompt' => ['required', 'string', 'max:2000']]);
+        $user = $request->user();
+        $session = $user->chatSessions()->create([
             'title' => 'Tạo bài: '.mb_substr(trim($validated['prompt']), 0, 70),
         ]);
 
         try {
-            $response = $gateway->complete([
-                [
-                    'role' => 'user',
-                    'content' => "Viết bản nháp bài viết tiếng Việt dễ hiểu, thân thiện. Trả lời theo cấu trúc: tiêu đề, nội dung có các đoạn ngắn, kết luận. Chủ đề: {$validated['prompt']}",
-                ],
-            ], auth()->user(), $session);
-
-            return redirect()->route('content.create')->with('draft', $response['content'])->with('prompt', $validated['prompt']);
-        } catch (Throwable $exception) {
-            report($exception);
+            $result = $gateway->complete([[
+                'role' => 'user',
+                'content' => "Viết bản nháp bài viết tiếng Việt dễ hiểu, thân thiện. Trả lời theo cấu trúc: tiêu đề, các đoạn nội dung ngắn, kết luận. Chủ đề: {$validated['prompt']}",
+            ]], $user, $session);
 
             return redirect()->route('content.create')
-                ->withInput(['prompt' => $validated['prompt']])
-                ->with('error', 'Không thể tạo bản nháp lúc này. Hãy thử lại sau.');
+                ->with('draft', $result['content'])
+                ->with('prompt', $validated['prompt']);
+        } catch (Throwable $exception) {
+            report($exception);
+            return redirect()->route('content.create')->withInput()
+                ->with('prompt', $validated['prompt'])
+                ->with('error', 'Chưa thể tạo bản nháp. Kiểm tra cấu hình AI hoặc thử lại sau.');
         }
     }
 
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
+        $data = $request->validate([
             'title' => ['required', 'string', 'max:200'],
             'body' => ['required', 'string', 'max:20000'],
             'source_prompt' => ['nullable', 'string', 'max:2000'],
         ]);
 
-        $post = auth()->user()->contentPosts()->create([
-            'title' => $validated['title'],
-            'body' => $validated['body'],
-            // Publishing is intentionally disabled until moderation is implemented.
-            'status' => 'draft',
-            'source_prompt' => $validated['source_prompt'] ?? null,
+        $post = $request->user()->contentPosts()->create([
+            'title' => $data['title'],
+            'body' => $data['body'],
+            'source_prompt' => $data['source_prompt'] ?? null,
+            'status' => 'draft', // Only moderators can approve a draft.
         ]);
 
-        return redirect()->route('content.show', $post)->with('status', 'Bản nháp đã được lưu.');
+        return redirect()->route('content.show', $post)->with('status', 'Đã lưu bản nháp. Bài viết sẽ được moderator duyệt.');
     }
 
     public function show(ContentPost $contentPost): View
     {
         abort_unless($contentPost->user_id === auth()->id(), 404);
-
         return view('content.show', compact('contentPost'));
     }
 }
