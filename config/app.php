@@ -3,11 +3,11 @@
 return [
     'name' => env('APP_NAME', 'BiếtTuốt'),
     'env' => env('APP_ENV', 'production'),
-    'debug' => env('APP_DEBUG', false),
+    'debug' => (bool) env('APP_DEBUG', false),
     'url' => env('APP_URL', 'http://localhost'),
-    'timezone' => 'Asia/Ho_Chi_Minh',
-    'locale' => 'vi',
+    'timezone' => env('APP_TIMEZONE', 'Asia/Ho_Chi_Minh'),
+    'locale' => env('APP_LOCALE', 'vi'),
     'fallback_locale' => 'en',
-    'cipher' => 'AES-256-CBC',
     'key' => env('APP_KEY'),
+    'cipher' => 'AES-256-CBC',
 ];

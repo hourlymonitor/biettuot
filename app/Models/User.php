@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -14,12 +15,20 @@ class User extends Authenticatable
 
     protected $hidden = ['password', 'remember_token'];
 
-    public function chatSessions()
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+        ];
+    }
+
+    public function chatSessions(): HasMany
     {
         return $this->hasMany(ChatSession::class);
     }
 
-    public function contentPosts()
+    public function contentPosts(): HasMany
     {
         return $this->hasMany(ContentPost::class);
     }

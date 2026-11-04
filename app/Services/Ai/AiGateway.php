@@ -12,20 +12,23 @@ use Throwable;
 
 class AiGateway
 {
+    /**
+     * @param  array<int, array{role: string, content: string}>  $messages
+     * @return array{content: string, provider: string, model: string}
+     */
     public function complete(array $messages, User $user, ChatSession $session): array
     {
-        $providers = collect(config('ai.providers'))
-            ->filter(fn (array $provider) => filled($provider['base_url'] ?? null))
-            ->values();
+        $providers = collect(config('ai.providers', []))->values();
 
         if ($providers->isEmpty()) {
-            throw new RuntimeException('No AI provider is configured.');
+            throw new RuntimeException('No complete AI provider configuration is available.');
         }
 
         $lastException = null;
 
         foreach ($providers as $provider) {
             $startedAt = microtime(true);
+
             try {
                 $response = Http::acceptJson()
                     ->withToken($provider['api_key'])
@@ -52,13 +55,18 @@ class AiGateway
             } catch (Throwable $exception) {
                 $lastException = $exception;
                 $this->recordUsage($user, $session, $provider, 'failed', $startedAt, null);
-                Log::warning('AI provider failed', ['provider' => $provider['name'], 'exception' => $exception->getMessage()]);
+                Log::warning('AI provider request failed; trying next configured provider.', [
+                    'provider' => $provider['name'],
+                    'model' => $provider['model'],
+                    'exception' => $exception::class,
+                ]);
             }
         }
 
-        throw new RuntimeException('All AI providers failed.', previous: $lastException);
+        throw new RuntimeException('All configured AI providers failed.', previous: $lastException);
     }
 
+    /** @param array<string, mixed>|null $response */
     private function recordUsage(User $user, ChatSession $session, array $provider, string $status, float $startedAt, ?array $response): void
     {
         try {
@@ -73,7 +81,8 @@ class AiGateway
                 'completion_tokens' => data_get($response, 'usage.completion_tokens'),
             ]);
         } catch (Throwable $exception) {
-            Log::warning('Unable to persist usage log', ['exception' => $exception->getMessage()]);
+            // Failure to store analytics must not hide a successful AI response.
+            Log::warning('Unable to persist AI usage log.', ['exception' => $exception::class]);
         }
     }
 }
